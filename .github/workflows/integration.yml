@@ -1,0 +1,77 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-client:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install client dependencies
+        run: npm install
+        working-directory: ./client
+
+      - name: Build client
+        run: npm run build
+        working-directory: ./client
+
+      - name: Upload client build
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-build
+          path: client/dist/
+          if-no-files-found: warn
+          retention-days: 1
+
+  client-tests:
+    runs-on: ubuntu-latest
+    needs: build-client
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install client dependencies
+        run: npm install
+        working-directory: ./client
+
+      - name: Run client tests
+        run: npm test
+        working-directory: ./client
+
+  build-server:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install server dependencies
+        run: npm install
+        working-directory: ./server
+
+      - name: Build server
+        run: npm run build
+        working-directory: ./server
+
+  server-tests:
+    runs-on: ubuntu-latest
+    needs: build-server
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install server dependencies
+        run: npm install
+        working-directory: ./server
+
+      - name: Run server tests
+        run: npm test
+        working-directory: ./server
