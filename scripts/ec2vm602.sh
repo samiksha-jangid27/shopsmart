@@ -1,13 +1,15 @@
 #!/bin/bash
 
-set -e
+set -e   # fail-fast: stop script if any command fails
 
+# ========= USER VARIABLES =========
 REGION="us-east-1"
 KEY_NAME="vockey"
 INSTANCE_TYPE="t3.micro"
 VPC_ID="vpc-0171c7489699ae305"
 SG_NAME="ubuntu-auto-sg"
-TAG_NAME="Ubuntu-CLI-Auto"
+TAG_NAME="Ubuntu-Auto-Instance"
+# ==================================
 
 echo "Fetching latest Ubuntu 24.04 AMI..."
 
@@ -19,9 +21,9 @@ AMI_ID=$(aws ec2 describe-images \
   --query 'reverse(sort_by(Images, &CreationDate))[0].ImageId' \
   --output text)
 
-echo "Using AMI: $AMI_ID"
+echo "AMI found: $AMI_ID"
 
-echo "Checking for existing security group..."
+echo "Checking if security group exists..."
 
 SG_ID=$(aws ec2 describe-security-groups \
   --region $REGION \
@@ -34,16 +36,25 @@ if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
   SG_ID=$(aws ec2 create-security-group \
     --region $REGION \
     --group-name $SG_NAME \
-    --description "Auto-created SG for Ubuntu EC2" \
+    --description "Auto SG for Ubuntu EC2" \
     --vpc-id $VPC_ID \
     --query "GroupId" \
     --output text)
 
+  echo "Adding SSH rule..."
   aws ec2 authorize-security-group-ingress \
     --region $REGION \
     --group-id $SG_ID \
     --protocol tcp \
     --port 22 \
+    --cidr 0.0.0.0/0
+
+  echo "Adding HTTP rule..."
+  aws ec2 authorize-security-group-ingress \
+    --region $REGION \
+    --group-id $SG_ID \
+    --protocol tcp \
+    --port 80 \
     --cidr 0.0.0.0/0
 else
   echo "Using existing security group: $SG_ID"
@@ -59,4 +70,4 @@ aws ec2 run-instances \
   --security-group-ids $SG_ID \
   --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$TAG_NAME}]"
 
-echo "EC2 instance launched successfully 🚀"
+echo "🎉 EC2 instance created successfully!"
