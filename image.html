@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Random Image</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; padding: 24px; }
+    img { max-width: 100%; height: auto; border-radius: 16px; }
+    button { padding: 10px 14px; border-radius: 10px; border: 1px solid #ccc; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>Random Image</h2>
+
+  <img id="randImg" alt="Random image" />
+
+  <p>
+    <button onclick="newImage()">Load another</button>
+  </p>
+
+  <script>
+    function newImage() {
+      // Random image from Picsum (adds a cache-buster so it changes every time)
+      const w = 900, h = 500;
+      document.getElementById("randImg").src = `https://picsum.photos/${w}/${h}?random=${Date.now()}`;
+    }
+    newImage();
+  </script>
+</body>
+</html>
