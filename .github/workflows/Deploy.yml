@@ -25,5 +25,5 @@ jobs:
 
       - name: Deploy HTML
         run: |
-          scp -i ~/.ssh/key.pem Image.html ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/Image.html
-          ssh -i ~/.ssh/key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "sudo mv /tmp/Image.html /var/www/html/Image.html && sudo chmod 644 /var/www/html/Image.html"
+          scp -i ~/.ssh/key.pem image.html ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/image.html
+          ssh -i ~/.ssh/key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "sudo mv /tmp/image.html /var/www/html/image.html && sudo chmod 644 /var/www/html/image.html"
