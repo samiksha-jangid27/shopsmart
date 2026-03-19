@@ -61,3 +61,5 @@ jobs:
 
       - name: Build server
         run: npm run build --if-present
+      - name: Deploy to EC2
+        run: echo "Simulated deployment to EC2"
