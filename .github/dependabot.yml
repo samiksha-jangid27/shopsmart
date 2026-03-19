@@ -1,11 +1,70 @@
+# Dependabot configuration file
+# Ref: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
 version: 2
 updates:
+  # Root directory
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "20:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "root"
+    groups:
+      production-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "production"
+      development-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "development"
+
+  # Frontend directory
   - package-ecosystem: "npm"
     directory: "/client"
     schedule:
       interval: "weekly"
-    
+      day: "sunday"
+      time: "20:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "frontend"
+    groups:
+      production-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "production"
+      development-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "development"
+
+  # Backend directory
   - package-ecosystem: "npm"
     directory: "/server"
     schedule:
       interval: "weekly"
+      day: "sunday"
+      time: "20:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "backend"
+    groups:
+      production-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "production"
+      development-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "development"
