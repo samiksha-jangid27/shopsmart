@@ -16,9 +16,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Root Route (optional, just to show something)
-app.get("/", (req, res) => {
-  res.status(200).send("Server running");
+// Dashboard Stats Route
+app.get('/api/stats', (req, res) => {
+  res.json({
+    orders: 42,
+    period: "Last 7 days"
+  });
 });
 
 module.exports = app;

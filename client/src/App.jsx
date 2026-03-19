@@ -16,14 +16,16 @@ import {
   Menu,
   User
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 export default function App() {
-    useEffect(() => {
-  fetch("http://localhost:5005/api/health")
-    .then(res => res.json())
-    .then(data => console.log("API:", data))
-    .catch(err => console.error(err));
-}, []);
+  const [stats, setStats] = useState({ orders: "...", period: "Loading..." });
+
+  useEffect(() => {
+    fetch("http://localhost:5005/api/stats")
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(err => console.error(err));
+  }, []);
   return (
     <div className="min-h-screen bg-[#e8f3ea] flex items-center justify-center p-4 md:p-8 font-sans relative overflow-hidden">
       {/* Background concentric curved dashed lines - omitted for minimal code size, can be added via SVG background if needed */}
@@ -119,10 +121,10 @@ export default function App() {
           {/* Top Bar */}
           <header className="flex flex-wrap items-center justify-between mb-10 gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-[44px] leading-none font-medium text-black">37</span>
+              <span className="text-[44px] leading-none font-medium text-black">{stats.orders}</span>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-gray-800 leading-tight">Orders</span>
-                <span className="text-sm text-gray-400 leading-tight">Last 7 days</span>
+                <span className="text-sm text-gray-400 leading-tight">{stats.period}</span>
               </div>
             </div>
 
