@@ -50,11 +50,8 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install client dependencies
-        working-directory: ./client
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
 
       - name: Run linter
         run: npm run lint --if-present
@@ -64,5 +61,6 @@ jobs:
 
       - name: Build server
         run: npm run build --if-present
+
       - name: Deploy to EC2
         run: echo "Simulated deployment to EC2"
