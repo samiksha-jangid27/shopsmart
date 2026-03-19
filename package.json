@@ -1,0 +1,14 @@
+{
+  "name": "shopsmart",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "client": "npm run dev --prefix client",
+    "server": "npm start --prefix server",
+    "e2e": "cypress run"
+  },
+  "devDependencies": {
+    "cypress": "^15.12.0"
+  }
+}

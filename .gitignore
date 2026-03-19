@@ -1,7 +1,11 @@
-node_modules
-.DS_Store
+node_modules/
+dist/
+dist-ssr/
+*.local
 .env
-dist
-build
-coverage
-.vercel
+.env.*
+!.env.example
+.DS_Store
+coverage/
+cypress/videos/
+cypress/screenshots/
