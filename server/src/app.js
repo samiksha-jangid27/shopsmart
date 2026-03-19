@@ -24,4 +24,9 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
+// Root Route
+app.get("/", (req, res) => {
+  res.status(200).send("Server running");
+});
+
 module.exports = app;
