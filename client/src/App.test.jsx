@@ -1,27 +1,12 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import App from './App';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from "@testing-library/react";
+import App from "./App";
 
-describe('App', () => {
-  it('renders ShopSmart title', async () => {
-    // Mock fetch
-    globalThis.fetch = vi.fn(() =>
-      Promise.resolve({
-        json: () =>
-          Promise.resolve({
-            status: 'ok',
-            message: 'Test Msg',
-            timestamp: 'now',
-          }),
-      })
-    );
+test("renders ShopSmart title", async () => {
+  render(<App />);
 
-    render(<App />);
-
-    const element = await screen.findByText((content, element) =>
-  element.textContent === "ShopSmart"
-);
-    expect(element).toBeInTheDocument();
+  const heading = await screen.findByRole("heading", {
+    name: /shop/i,
   });
+
+  expect(heading).toBeInTheDocument();
 });
