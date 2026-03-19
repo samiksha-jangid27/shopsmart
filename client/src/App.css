@@ -1,0 +1,99 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fa;
+}
+
+/* NAVBAR */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0ea5e9;
+  color: white;
+  padding: 15px 30px;
+}
+
+.logo {
+  margin: 0;
+}
+
+.search {
+  padding: 8px;
+  width: 300px;
+  border-radius: 5px;
+  border: none;
+}
+
+.nav-links span {
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+/* HERO */
+.hero {
+  background: linear-gradient(to right, #0ea5e9, #38bdf8);
+  color: white;
+  padding: 60px 30px;
+}
+
+.hero-text h1 {
+  font-size: 36px;
+}
+
+.hero button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  border: none;
+  background: white;
+  color: #0ea5e9;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* STATUS */
+.status-card {
+  margin: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+}
+
+.ok {
+  color: green;
+}
+
+/* PRODUCTS */
+.products {
+  padding: 20px;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.image-placeholder {
+  height: 150px;
+  background: #e5e7eb;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.card button {
+  margin-top: 10px;
+  padding: 8px;
+  border: none;
+  background: #0ea5e9;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
