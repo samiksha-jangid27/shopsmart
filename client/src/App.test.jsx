@@ -19,7 +19,9 @@ describe('App', () => {
 
     render(<App />);
 
-    const element = await screen.findByText(/ShopSmart/i);
+    const element = await screen.findByText((content, element) =>
+  element.textContent === "ShopSmart"
+);
     expect(element).toBeInTheDocument();
   });
 });
