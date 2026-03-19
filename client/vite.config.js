@@ -1,26 +1,27 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig(({ mode }) => ({
-    plugins: [react()],
-    
-    server: {
-        proxy: {
-            '/api': {
-                target: 'http://localhost:5001',
-                changeOrigin: true,
-            }
-        }
-    },
+const isCI = process.env.CI === 'true'
 
-    test: {
-        globals: true,
-        environment: 'jsdom',
-        setupFiles: './src/setupTests.js',
-    },
+export default defineConfig({
+  plugins: [react()],
+  
+  css: isCI
+    ? {} // 🚀 disable PostCSS in CI
+    : {},
 
-    // ✅ FIX HERE
-    css: {
-        postcss: mode === 'test' ? {} : undefined,
-    },
-}))
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5005',
+        changeOrigin: true,
+      }
+    }
+  },
+
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.js',
+  },
+})
