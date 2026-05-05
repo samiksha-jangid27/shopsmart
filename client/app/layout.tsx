@@ -5,8 +5,6 @@ import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { apiFetch } from "@/lib/api";
 import type { User } from "@/types/catalog";
-
-// @ts-expect-error CSS import is handled by Next.js build pipeline.
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
