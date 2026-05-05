@@ -196,13 +196,20 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Set deploy image metadata
+        id: deploy-meta
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          IMAGE_URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
+          echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+
       - name: Render ECS task definition
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ${{ runner.temp }}/task-definition.json
           container-name: ${{ env.ECS_CONTAINER_NAME }}
-          image: ${{ needs.build-and-push.outputs.image_uri }}:${{ github.sha }}
+          image: ${{ steps.deploy-meta.outputs.image_uri }}:${{ github.sha }}
 
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
