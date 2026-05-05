@@ -88,7 +88,7 @@ locals {
         command = [
           "sh",
           "-c",
-          "node -e \"const http=require('http');http.createServer((req,res)=>{const body=req.url==='/api/health'?JSON.stringify({status:'ok',message:'ShopSmart placeholder',timestamp:new Date().toISOString()}):req.url==='/api/stats'?JSON.stringify({orders:42,period:'Last 7 days'}):JSON.stringify({status:'ok'});res.writeHead(200,{'Content-Type':'application/json'});res.end(body);}).listen(process.env.PORT||5001);setInterval(()=>{},1000);\""
+          "node -e \"const http=require('http');http.createServer((req,res)=>{const body=req.url==='/api/health'?JSON.stringify({status:'ok',message:'ShopSmart placeholder',timestamp:new Date().toISOString()}):req.url==='/api/stats'?JSON.stringify({orders:42,period:'Last 7 days'}):JSON.stringify({status:'ok'});res.writeHead(200,{'Content-Type':'application/json'});res.end(body);}).listen(process.env.PORT||4000);setInterval(()=>{},1000);\""
         ]
         logConfiguration = {
           logDriver = "awslogs"

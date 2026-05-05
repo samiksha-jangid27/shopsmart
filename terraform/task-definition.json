@@ -13,15 +13,15 @@
       "essential": true,
       "portMappings": [
         {
-          "containerPort": 5001,
-          "hostPort": 5001,
+          "containerPort": 4000,
+          "hostPort": 4000,
           "protocol": "tcp"
         }
       ],
       "environment": [
         {
           "name": "PORT",
-          "value": "5001"
+          "value": "4000"
         }
       ],
       "logConfiguration": {

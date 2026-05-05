@@ -11,11 +11,12 @@ env:
   AWS_REGION: us-east-1
   TF_STATE_BUCKET: shopsmart-tfstate-samiksha-20260505
   TF_STATE_KEY: shopsmart/terraform.tfstate
-  TF_DIR: infra
+  TF_DIR: terraform
   ECR_REPOSITORY: shopsmart-api
   ECS_CLUSTER: shopsmart-cluster
   ECS_SERVICE: shopsmart-service
-  ECS_TASK_DEFINITION: infra/task-definition.json
+  ECS_TASK_DEFINITION: terraform/task-definition.json
+  
   ECS_CONTAINER_NAME: shopsmart-api
   ECS_TASK_EXECUTION_ROLE_ARN: arn:aws:iam::857558323395:role/LabRole
   ECS_TASK_ROLE_ARN: arn:aws:iam::857558323395:role/LabRole
@@ -36,21 +37,25 @@ jobs:
 
       - name: Install server dependencies
         working-directory: server
-        run: npm install
+        run: npm ci
 
-      - name: Run server tests with JUnit output
+      - name: Generate Prisma client and build the server
         working-directory: server
-        env:
-          CI: true
-          JEST_JUNIT_OUTPUT_FILE: junit.xml
-        run: npm test
+        run: |
+          npm run prisma:generate
+          npm run build
 
-      - name: Upload server test report
+      - name: Run server tests
+        working-directory: server
+        run: |
+          npm test
+
+      - name: Upload server JUnit report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: server-junit-report
-          path: server/junit.xml
+          name: server-junit
+          path: server/artifacts/junit/server-junit.xml
 
   client-tests:
     runs-on: ubuntu-latest
@@ -67,13 +72,24 @@ jobs:
 
       - name: Install client dependencies
         working-directory: client
-        run: npm install
+        run: npm ci
+
+      - name: Build client application
+        working-directory: client
+        run: |
+          npm run build
 
       - name: Run client tests
         working-directory: client
-        env:
-          CI: true
-        run: npm test -- --run
+        run: |
+          npm test
+
+      - name: Upload client JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-junit
+          path: client/artifacts/junit/client-junit.xml
 
   terraform:
     runs-on: ubuntu-latest
@@ -110,7 +126,7 @@ jobs:
           fi
 
       - name: Terraform init
-        working-directory: infra
+        working-directory: terraform
         run: |
           terraform init \
             -backend-config="bucket=${TF_STATE_BUCKET}" \
@@ -119,11 +135,11 @@ jobs:
             -backend-config="encrypt=true"
 
       - name: Terraform validate
-        working-directory: infra
+        working-directory: terraform
         run: terraform validate
 
       - name: Terraform plan
-        working-directory: infra
+        working-directory: terraform
         run: |
           terraform plan -out=tfplan \
             -var="use_existing_iam_roles=true" \
@@ -131,7 +147,7 @@ jobs:
             -var="ecs_task_role_arn=${ECS_TASK_ROLE_ARN}"
 
       - name: Terraform apply
-        working-directory: infra
+        working-directory: terraform
         run: terraform apply -auto-approve tfplan
 
   build-and-push:

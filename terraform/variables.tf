@@ -25,7 +25,7 @@ variable "vpc_cidr" {
 variable "container_port" {
   description = "Port exposed by the API container."
   type        = number
-  default     = 5001
+  default     = 4000
 }
 
 variable "desired_count" {
