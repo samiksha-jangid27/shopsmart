@@ -1,9 +1,7 @@
 const express = require('express');
-const router = express.express;
-// fix express.router -> express.Router()
-const routerInstance = express.Router();
+const router = express.Router();
 const statsController = require('../controllers/statsController');
 
-routerInstance.get('/', statsController.getStats);
+router.get('/', statsController.getStats);
 
-module.exports = routerInstance;
+module.exports = router;

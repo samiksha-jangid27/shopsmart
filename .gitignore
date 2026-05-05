@@ -9,3 +9,8 @@ dist-ssr/
 coverage/
 cypress/videos/
 cypress/screenshots/
+client/dist
+
+# Terraform generated artifacts
+infra/.terraform/
+infra/tfplan

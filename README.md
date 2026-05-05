@@ -1,33 +1,58 @@
 # ShopSmart
 
-ShopSmart is a premium, high-end e-commerce platform designed with an editorial, Dribbble-inspired UI aesthetic. It features a complete React frontend connected to a Node/Express backend.
+ShopSmart is a premium, high-end e-commerce platform designed with an editorial, Dribbble-inspired UI aesthetic. It features a complete React frontend connected to a Node/Express backend, deployed on AWS ECS Fargate via Infrastructure as Code (Terraform).
 
 ## 1. Architecture
 
-The system follows a classic Client-Server Architecture:
-- **Client**: A robust Single Page Application (SPA) built with React and Vite. It heavily utilizes Tailwind CSS v4 for utility-first styling and component modularity.
-- **Server**: A lightweight Node.js Express server providing RESTful APIs (e.g., `/api/health`, `/api/stats`).
-- **Data Flow**: The frontend securely fetches dynamic statistical and promotional data from the backend via standard HTTP requests and binds it to state using hooks securely (demonstrating Integration patterns).
+**Application Stack**:
+- **Frontend**: React 18 + Vite 5 SPA, styled with Tailwind CSS v4, deployed as containerized nginx service on ECS Fargate
+- **Backend**: Node.js 20 Express server providing RESTful APIs (`/api/health`, `/api/stats`), deployed as containerized service on ECS Fargate
+- **Infrastructure**: AWS ECS Fargate (container orchestration), ECR (image registry), S3 (Terraform state), VPC (networking), ALB (load balancing), IAM (access control), CloudWatch (logging)
 
-## 2. Project Workflow & CI/CD Pipeline
+**Data Flow**: Frontend fetches dynamic stats from backend via centralized API service (`client/src/services/api.js`), using `VITE_API_URL` environment variable to point to ALB DNS name in production.
 
-The development workflow adheres strictly to enterprise standards:
-*   **Version Control**: Frequent, meaningful logical commits separate distinct features (UI, API, Testing, CI).
-*   **Continuous Integration (CI)**: GitHub Actions automatically trigger on `push` and `pull_request` to the `main` branch. The pipeline:
-    1. Installs dependencies.
-    2. Runs advanced code Linting (ESLint globally configured for Jest and React).
-    3. Executes all Unit and Integration tests to proactively catch regressions.
-*   **Continuous Deployment (CD)**: An automated workflow connects GitHub Actions securely to AWS EC2 via SSH (`appleboy/ssh-action`), cloning the latest code and executing an **Idempotent Bash Script** (`scripts/deploy.sh`) that safely checks processes and restarts the PM2 production daemon.
-*   **Dependency Management**: Dependabot is structurally configured (`.github/dependabot.yml`) to scan npm packages weekly avoiding stale or vulnerable libraries.
+## 2. Infrastructure as Code (Terraform)
 
-## 3. Design Decisions
+All AWS infrastructure is defined in `infra/` as code and managed by Terraform:
+- **`infra/state.tf`**: S3 bucket for Terraform state with versioning, encryption (AES256), and public access block
+- **`infra/network.tf`**: VPC (10.40.0.0/16), 2 public subnets, Internet Gateway, security groups
+- **`infra/ecr.tf`**: ECR repository for Docker images with lifecycle policy (retain 10 newest)
+- **`infra/ecs.tf`**: ECS Fargate cluster, ALB, target groups, CloudWatch logs, ECS services
+- **`infra/iam.tf`**: ECS task execution role and task role with required IAM policies
+- **`infra/versions.tf`**: Terraform configuration (≥1.6) with AWS provider ~5.0
+- **`infra/outputs.tf`**: Exported values (S3 state bucket, ECR URL, ECS cluster name, ALB DNS)
 
-*   **Pristine UI Overload Prevention**: We avoided heavy styling frameworks (like Material UI) in favor of raw TailwindCSS which allowed us to completely custom-craft our masonry "Bento-box" grid, precise pill-shaped search bars, and the distinctive sage green (`#e8f3ea`)/white layout to hit the strict visual requirement.
-*   **Strict Monorepo Separation**: `client/` and `server/` are siloed to mimic scaling microservices but reside in the same physical repository to reduce developer friction.
-*   **Testing Philosophy**: 
-    - *Jest* + *Supertest* natively validates Node API functionality logically and at the protocol level (Integration).
-    - *Vitest* + *React Testing Library* enforces that our DOM renders asynchronously and handles failure gracefully.
-    - *Cypress* sits on top to mimic a human browsing paths unconditionally (E2E).
+**Before first deploy**: Create S3 bucket manually:
+```bash
+aws s3api create-bucket --bucket shopsmart-tfstate-<unique-id> --region us-east-1
+```
+
+## 3. CI/CD Pipeline
+
+GitHub Actions unified workflow (`.github/workflows/ci-cd.yml`) runs on every push to `main`:
+
+1. **Test**: `npm test` in server (Jest with junit-xml) and client (Vitest)
+2. **Terraform**: `terraform init` → `plan` → `apply` (provisions/updates AWS infrastructure)
+3. **Build & Push**: Docker multi-stage builds for server and client, pushed to ECR with `:latest` and `:sha-<commit>` tags
+4. **Deploy**: ECS service update with new image, waits for stable deployment
+5. **Health Check**: 20-retry loop curling `/api/health` via ALB DNS
+
+**Secrets Required** (set in GitHub repo Settings → Secrets and variables → Actions):
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN` (if using temporary credentials)
+- `AWS_REGION` (e.g., `us-east-1`)
+
+## 4. Design Decisions
+
+- **Multi-Stage Docker Builds**: Each Dockerfile builds dependencies in a builder stage, then copies only artifacts to a minimal runtime stage (non-root user, healthcheck, reduced layer count)
+- **Centralized API Service**: `client/src/services/api.js` abstracts HTTP calls (fetchStats, fetchHealth) and respects `VITE_API_URL` env var
+- **Terraform Backend State**: S3 bucket with encryption and versioning ensures team collaboration and disaster recovery
+- **No Kubernetes**: ECS Fargate chosen for simpler operational model (AWS-managed control plane, pay-per-use compute)
+- **Testing Strategy**:
+  - Jest (server): Unit + integration tests with jest-junit reporter for CI artifacts
+  - Vitest (client): Component + integration tests with React Testing Library
+  - Cypress (E2E): Full user flow validation against running application
 
 ## 4. Challenges
 

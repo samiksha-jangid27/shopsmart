@@ -1,15 +1,19 @@
 const { formatPrice } = require('../src/utils');
 
-describe('Utility Functions - formatPrice', () => {
-  test('should format positive integer correctly', () => {
+describe('Unit Tests — Utility Functions', () => {
+  test('formatPrice formats a positive integer correctly', () => {
     expect(formatPrice(36)).toBe('$36.00');
   });
 
-  test('should handle floats correctly', () => {
+  test('formatPrice formats a float correctly', () => {
     expect(formatPrice(89.99)).toBe('$89.99');
   });
 
-  test('should reject non-numbers', () => {
+  test('formatPrice rejects a string input', () => {
     expect(formatPrice('100')).toBeNull();
+  });
+
+  test('formatPrice rejects null', () => {
+    expect(formatPrice(null)).toBeNull();
   });
 });

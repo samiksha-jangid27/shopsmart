@@ -1,34 +1,34 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
 
-// Mock fetch to simulate the backend API integration
-global.fetch = vi.fn((url) => {
-  if (url === 'http://localhost:5005/api/stats') {
-    return Promise.resolve({
-      json: () => Promise.resolve({ orders: 99, period: "All Time" })
-    });
-  }
-  return Promise.reject(new Error("Unknown URL"));
+// Mock global fetch before each test
+beforeEach(() => {
+  global.fetch = vi.fn(() =>
+    Promise.resolve({
+      json: () =>
+        Promise.resolve({ orders: 99, period: 'Test Period' }),
+    })
+  );
 });
 
-describe('App Component', () => {
-  it('renders the ShopSmart logo', () => {
+describe('App Component — Unit Tests', () => {
+  it('renders the ShopSmart logo text', () => {
     render(<App />);
     expect(screen.getByText(/Shop/i)).toBeInTheDocument();
     expect(screen.getByText(/Smart/i)).toBeInTheDocument();
   });
 
-  it('fetches and displays dynamic stats', async () => {
+  it('shows loading state before fetch resolves', () => {
     render(<App />);
-    
-    // Check loading state (defined as "..." in useState)
-    expect(screen.getByText("...")).toBeInTheDocument();
+    expect(screen.getByText('...')).toBeInTheDocument();
+  });
 
-    // Wait for the mock fetch to resolve
+  it('fetches and renders dynamic stats from API', async () => {
+    render(<App />);
     await waitFor(() => {
-      expect(screen.getByText("99")).toBeInTheDocument();
-      expect(screen.getByText("All Time")).toBeInTheDocument();
+      expect(screen.getByText('99')).toBeInTheDocument();
+      expect(screen.getByText('Test Period')).toBeInTheDocument();
     });
   });
 });

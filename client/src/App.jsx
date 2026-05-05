@@ -17,14 +17,14 @@ import {
   User
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { fetchStats } from './services/api';
 export default function App() {
   const [stats, setStats] = useState({ orders: "...", period: "Loading..." });
 
   useEffect(() => {
-    fetch("http://localhost:5005/api/stats")
-      .then(res => res.json())
-      .then(data => setStats(data))
-      .catch(err => console.error(err));
+    fetchStats()
+      .then((data) => setStats(data))
+      .catch((err) => console.error(err));
   }, []);
   return (
     <div className="min-h-screen bg-[#e8f3ea] flex items-center justify-center p-4 md:p-8 font-sans relative overflow-hidden">

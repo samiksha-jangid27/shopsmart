@@ -1,24 +1,25 @@
 const request = require('supertest');
 const app = require('../src/app');
 
-describe('API Integration Tests', () => {
-  test('GET /api/health should return status ok', async () => {
-    const response = await request(app).get('/api/health');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('status', 'ok');
-    expect(response.body).toHaveProperty('message');
+describe('Unit Tests — Health & Stats', () => {
+  test('GET /api/health returns status ok', async () => {
+    const res = await request(app).get('/api/health');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('status', 'ok');
+    expect(res.body).toHaveProperty('message');
+    expect(res.body).toHaveProperty('timestamp');
   });
 
-  test('GET /api/stats should return dynamic dashboard data', async () => {
-    const response = await request(app).get('/api/stats');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('orders');
-    expect(typeof response.body.orders).toBe('number');
-    expect(response.body).toHaveProperty('period', 'Last 7 days');
+  test('GET /api/stats returns orders and period', async () => {
+    const res = await request(app).get('/api/stats');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('orders');
+    expect(typeof res.body.orders).toBe('number');
+    expect(res.body).toHaveProperty('period', 'Last 7 days');
   });
 
-  test('GET / unknown route should return 404', async () => {
-    const response = await request(app).get('/api/unknown');
-    expect(response.status).toBe(404);
+  test('GET /unknown route returns 404', async () => {
+    const res = await request(app).get('/api/unknown');
+    expect(res.status).toBe(404);
   });
 });

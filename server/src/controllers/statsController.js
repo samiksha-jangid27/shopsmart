@@ -1,6 +1,6 @@
+const { getDashboardStats } = require('../services/statsService');
+
 exports.getStats = (req, res) => {
-  res.json({
-    orders: 42,
-    period: "Last 7 days"
-  });
+  const data = getDashboardStats();
+  res.json(data);
 };
