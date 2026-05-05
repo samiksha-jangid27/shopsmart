@@ -1,0 +1,37 @@
+{
+  "family": "shopsmart-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "PLACEHOLDER_EXECUTION_ROLE_ARN",
+  "taskRoleArn": "PLACEHOLDER_TASK_ROLE_ARN",
+  "containerDefinitions": [
+    {
+      "name": "shopsmart-api",
+      "image": "IMAGE_URI",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 5001,
+          "hostPort": 5001,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "PORT",
+          "value": "5001"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/shopsmart",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "shopsmart"
+        }
+      }
+    }
+  ]
+}
