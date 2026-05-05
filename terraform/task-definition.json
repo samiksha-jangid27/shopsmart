@@ -4,8 +4,8 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
-  "executionRoleArn": "PLACEHOLDER_EXECUTION_ROLE_ARN",
-  "taskRoleArn": "PLACEHOLDER_TASK_ROLE_ARN",
+  "executionRoleArn": "arn:aws:iam::857558323395:role/LabRole",
+  "taskRoleArn": "arn:aws:iam::857558323395:role/LabRole",
   "containerDefinitions": [
     {
       "name": "shopsmart-api",

@@ -55,17 +55,17 @@ variable "placeholder_image" {
 variable "use_existing_iam_roles" {
   description = "If true, use provided IAM role ARNs instead of creating new roles. Helpful for limited-permission accounts."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "ecs_task_execution_role_arn" {
   description = "ARN of an existing ECS task execution role to use when `use_existing_iam_roles` is true."
   type        = string
-  default     = ""
+  default     = "arn:aws:iam::857558323395:role/LabRole"
 }
 
 variable "ecs_task_role_arn" {
   description = "ARN of an existing ECS task role to use when `use_existing_iam_roles` is true."
   type        = string
-  default     = ""
+  default     = "arn:aws:iam::857558323395:role/LabRole"
 }

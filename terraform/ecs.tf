@@ -45,6 +45,9 @@ resource "aws_lb_target_group" "app" {
   }
 
   tags = local.tags
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_lb_listener" "http" {
@@ -55,6 +58,9 @@ resource "aws_lb_listener" "http" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app.arn
+  }
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

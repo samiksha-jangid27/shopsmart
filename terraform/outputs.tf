@@ -21,3 +21,11 @@ output "alb_dns_name" {
 output "task_definition_family" {
   value = aws_ecs_task_definition.app.family
 }
+
+output "execution_role_arn" {
+  value = local.execution_role_arn
+}
+
+output "task_role_arn" {
+  value = local.task_role_arn
+}

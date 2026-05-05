@@ -1,0 +1,67 @@
+name: ShopSmart CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: 20
+
+jobs:
+  server-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Generate Prisma client and build the server
+        working-directory: server
+        run: |
+          npm run prisma:generate
+          npm run build
+
+      - name: Run server tests
+        working-directory: server
+        run: npm test
+
+      - name: Upload server JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-junit
+          path: server/artifacts/junit/server-junit.xml
+
+  client-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install client dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Run client tests
+        working-directory: client
+        run: npm test
+
+      - name: Upload client JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-junit
+          path: client/artifacts/junit/client-junit.xml
