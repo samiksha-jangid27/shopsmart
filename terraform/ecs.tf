@@ -26,7 +26,7 @@ resource "aws_lb" "app" {
 }
 
 resource "aws_lb_target_group" "app" {
-  name        = "${local.name}-tg"
+  name_prefix = "smtg-"
   port        = var.container_port
   protocol    = "HTTP"
   target_type = "ip"

@@ -12,6 +12,8 @@ cypress/screenshots/
 client/dist
 
 # Terraform generated artifacts
+terraform/.terraform/
+terraform/tfplan
 infra/.terraform/
 infra/tfplan
 .next
