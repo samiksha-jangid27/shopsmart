@@ -16,9 +16,12 @@ export const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: env.clientUrl,
-    credentials: true
-  })
+  origin: [
+    "http://localhost:3000",
+    "https://shopsmart-o68g.vercel.app"
+  ],
+  credentials: true
+})
 );
 app.use(express.json({ limit: "8mb" }));
 app.use(cookieParser());
