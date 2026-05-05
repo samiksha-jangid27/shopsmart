@@ -1,11 +1,12 @@
 import { cookies } from "next/headers";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 type FetchOptions = RequestInit & { auth?: boolean };
 
 export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
   const headers = new Headers(options.headers);
+
   if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
@@ -24,11 +25,9 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
   });
 
   if (!response.ok) {
-    const error = (await response.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(error?.message ?? "Request failed");
+    console.error("API error:", response.status);
+    return {} as T;
   }
 
   return response.json() as Promise<T>;
 }
-
-export { API_URL };
