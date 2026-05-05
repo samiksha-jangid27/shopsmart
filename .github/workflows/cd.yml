@@ -10,6 +10,9 @@ env:
   ECS_SERVICE: shopsmart-service
   ECS_TASK_DEFINITION: terraform/task-definition.json
   ECS_CONTAINER_NAME: shopsmart-api
+  TF_STATE_BUCKET: shopsmart-tfstate-samiksha-20260505
+  TF_STATE_KEY: shopsmart/terraform.tfstate
+  TF_DIR: terraform
 
 jobs:
   deploy:
@@ -25,6 +28,95 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: Ensure Terraform state bucket exists
+        run: |
+          if ! aws s3api head-bucket --bucket "${TF_STATE_BUCKET}" 2>/dev/null; then
+            if [ "${AWS_REGION}" = "us-east-1" ]; then
+              aws s3api create-bucket --bucket "${TF_STATE_BUCKET}"
+            else
+              aws s3api create-bucket --bucket "${TF_STATE_BUCKET}" --create-bucket-configuration "LocationConstraint=${AWS_REGION}"
+            fi
+          fi
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="encrypt=true"
+
+      - name: Terraform validate
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform validate
+
+      - name: Import existing AWS resources if needed
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          set -e
+          STATE_LIST=$(terraform state list || true)
+
+          import_if_missing() {
+            local address="$1"
+            local import_id="$2"
+            if ! printf '%s\n' "$STATE_LIST" | grep -qx "$address"; then
+              echo "Importing $address"
+              terraform import "$address" "$import_id"
+            fi
+          }
+
+          VPC_ID=$(aws ec2 describe-vpcs --filters Name=tag:Name,Values=shopsmart-vpc --query 'Vpcs[0].VpcId' --output text)
+          IGW_ID=$(aws ec2 describe-internet-gateways --filters Name=tag:Name,Values=shopsmart-igw --query 'InternetGateways[0].InternetGatewayId' --output text)
+          SUBNET_IDS=($(aws ec2 describe-subnets --filters Name=vpc-id,Values="$VPC_ID" Name=tag:Name,Values=shopsmart-public-1,shopsmart-public-2 --query 'Subnets[].SubnetId' --output text))
+          RT_ID=$(aws ec2 describe-route-tables --filters Name=vpc-id,Values="$VPC_ID" Name=tag:Name,Values=shopsmart-public-rt --query 'RouteTables[0].RouteTableId' --output text)
+          ALB_SG_ID=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values="$VPC_ID" Name=group-name,Values=shopsmart-alb-sg --query 'SecurityGroups[0].GroupId' --output text)
+          ECS_SG_ID=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values="$VPC_ID" Name=group-name,Values=shopsmart-ecs-sg --query 'SecurityGroups[0].GroupId' --output text)
+          ALB_ARN=$(aws elbv2 describe-load-balancers --names shopsmart-alb --query 'LoadBalancers[0].LoadBalancerArn' --output text)
+          TG_ARN=$(aws elbv2 describe-target-groups --names shopsmart-tg --query 'TargetGroups[0].TargetGroupArn' --output text)
+          LISTENER_ARN=$(aws elbv2 describe-listeners --load-balancer-arn "$ALB_ARN" --query 'Listeners[0].ListenerArn' --output text)
+          CLUSTER_NAME=shopsmart-cluster
+          SERVICE_NAME=shopsmart-service
+          LOG_GROUP_NAME=/ecs/shopsmart
+          ECR_REPO_NAME=shopsmart-api
+          STATE_BUCKET_NAME=shopsmart-tfstate-samiksha-20260505
+
+          import_if_missing aws_vpc.main "$VPC_ID"
+          import_if_missing aws_internet_gateway.main "$IGW_ID"
+          import_if_missing aws_subnet.public[0] "${SUBNET_IDS[0]}"
+          import_if_missing aws_subnet.public[1] "${SUBNET_IDS[1]}"
+          import_if_missing aws_route_table.public "$RT_ID"
+          import_if_missing aws_security_group.alb "$ALB_SG_ID"
+          import_if_missing aws_security_group.ecs "$ECS_SG_ID"
+          import_if_missing aws_lb.app "$ALB_ARN"
+          import_if_missing aws_lb_target_group.app "$TG_ARN"
+          import_if_missing aws_lb_listener.http "$LISTENER_ARN"
+          import_if_missing aws_ecs_cluster.main "$CLUSTER_NAME"
+          import_if_missing aws_ecs_service.app "$CLUSTER_NAME/$SERVICE_NAME"
+          import_if_missing aws_cloudwatch_log_group.app "$LOG_GROUP_NAME"
+          import_if_missing aws_ecr_repository.app "$ECR_REPO_NAME"
+          import_if_missing aws_s3_bucket.terraform_state "$STATE_BUCKET_NAME"
+          import_if_missing aws_s3_bucket_versioning.terraform_state "$STATE_BUCKET_NAME"
+          import_if_missing aws_s3_bucket_server_side_encryption_configuration.terraform_state "$STATE_BUCKET_NAME"
+          import_if_missing aws_s3_bucket_public_access_block.terraform_state "$STATE_BUCKET_NAME"
+
+      - name: Terraform plan
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform plan -out=tfplan -detailed-exitcode || true
+
+      - name: Inspect plan and apply only if changes
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform show -json tfplan > plan.json || true
+          CHANGES=$(jq '.resource_changes | length' plan.json || echo 0)
+          echo "Detected resource changes: $CHANGES"
+          if [ "$CHANGES" -eq 0 ]; then
+            echo "No infrastructure changes to apply"
+            exit 0
+          fi
+          terraform apply -auto-approve tfplan
 
       - name: Set image metadata
         id: meta
