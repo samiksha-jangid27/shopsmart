@@ -84,7 +84,7 @@ jobs:
       - name: Build and push server image
         uses: docker/build-push-action@v6
         with:
-          context: ./server
+          context: .
           file: ./docker/Dockerfile.server
           push: true
           tags: |
@@ -94,8 +94,8 @@ jobs:
       - name: Build and push client image
         uses: docker/build-push-action@v6
         with:
-          context: ./client
-          file: ../docker/Dockerfile.client
+          context: .
+          file: ./docker/Dockerfile.client
           push: true
           tags: |
             ${{ steps.meta.outputs.client_repo }}:${{ github.sha }}

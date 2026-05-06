@@ -1,21 +1,19 @@
-# ─── Stage 1: Build the server ───────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY server/package*.json ./
 
 RUN npm ci
 
-COPY prisma ./prisma
-COPY tsconfig.json ./
-COPY src ./src
+COPY server/prisma ./prisma
+COPY server/tsconfig.json ./
+COPY server/src ./src
 
 RUN npm run prisma:generate
 RUN npm run build
 
 
-# ─── Stage 2: Production runtime ─────────────────────────────────────────────
 FROM node:20-alpine AS runtime
 
 WORKDIR /app
@@ -25,7 +23,7 @@ ENV PORT=4000
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-COPY package*.json ./
+COPY server/package*.json ./
 
 RUN npm ci --omit=dev
 
