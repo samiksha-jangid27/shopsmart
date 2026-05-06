@@ -13,7 +13,7 @@ ShopSmart is a premium, high-end e-commerce platform designed with an editorial,
 
 ## 2. Infrastructure as Code (Terraform)
 
-All AWS infrastructure is defined in `infra/` as code and managed by Terraform:
+All AWS infrastructure is defined in `terraform/` as code and managed by Terraform:
 - **`infra/state.tf`**: S3 bucket for Terraform state with versioning, encryption (AES256), and public access block
 - **`infra/network.tf`**: VPC (10.40.0.0/16), 2 public subnets, Internet Gateway, security groups
 - **`infra/ecr.tf`**: ECR repository for Docker images with lifecycle policy (retain 10 newest)
@@ -26,6 +26,30 @@ All AWS infrastructure is defined in `infra/` as code and managed by Terraform:
 ```bash
 aws s3api create-bucket --bucket shopsmart-tfstate-<unique-id> --region us-east-1
 ```
+
+## Deploy to AWS (ECR + ECS)
+
+This repo includes helper scripts to build container images and deploy via Terraform. Ensure `aws` CLI, `docker`, and `terraform` are installed and configured.
+
+1. Build and push images to ECR:
+
+```bash
+./scripts/build_and_push_images.sh <optional-tag>
+# example: ./scripts/build_and_push_images.sh sha-$(git rev-parse --short HEAD)
+```
+
+2. Deploy (apply Terraform) to have ECS use the pushed images:
+
+```bash
+./scripts/deploy_with_terraform.sh <api_image> <client_image>
+# example: ./scripts/deploy_with_terraform.sh \
+# 111111111111.dkr.ecr.us-east-1.amazonaws.com/shopsmart-api:sha-abc \
+# 111111111111.dkr.ecr.us-east-1.amazonaws.com/shopsmart-client:sha-abc
+```
+
+Notes:
+- Terraform state is configured in `terraform/backend.tf` to use an S3 backend and DynamoDB for locks. Make sure the S3 bucket and DynamoDB table exist (the `terraform` configuration includes resources to create them if running under the same AWS credentials).
+- The Terraform variables `api_image` and `client_image` can be passed to `terraform apply` to set the image URIs used by ECS task definitions.
 
 ## 3. CI/CD Pipeline
 

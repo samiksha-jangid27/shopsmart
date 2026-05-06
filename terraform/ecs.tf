@@ -121,7 +121,7 @@ locals {
     containerDefinitions = [
       {
         name      = "${local.name}-client"
-        image     = var.placeholder_image
+        image     = var.client_image != "" ? var.client_image : var.placeholder_image
         essential = true
         portMappings = [
           {
@@ -194,7 +194,7 @@ resource "aws_ecs_service" "client" {
   depends_on = [aws_lb_listener.http]
 
   lifecycle {
-    ignore_changes = [task_definition, desired_count]
+    ignore_changes = [desired_count]
   }
 
   tags = local.tags
@@ -214,7 +214,7 @@ locals {
     containerDefinitions = [
       {
         name      = "${local.name}-api"
-        image     = var.placeholder_image
+        image     = var.api_image != "" ? var.api_image : var.placeholder_image
         essential = true
         portMappings = [
           {
@@ -287,7 +287,7 @@ resource "aws_ecs_service" "api" {
   depends_on = [aws_lb_listener.http]
 
   lifecycle {
-    ignore_changes = [task_definition, desired_count]
+    ignore_changes = [desired_count]
   }
 
   tags = local.tags

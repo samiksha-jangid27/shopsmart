@@ -75,3 +75,15 @@ variable "ecs_task_role_arn" {
   type        = string
   default     = "arn:aws:iam::857558323395:role/LabRole"
 }
+
+variable "api_image" {
+  description = "Full ECR image URI for the API (overrides placeholder when non-empty)."
+  type        = string
+  default     = ""
+}
+
+variable "client_image" {
+  description = "Full ECR image URI for the client (overrides placeholder when non-empty)."
+  type        = string
+  default     = ""
+}

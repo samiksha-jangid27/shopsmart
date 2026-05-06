@@ -69,12 +69,14 @@ jobs:
           fi
           terraform apply -auto-approve tfplan
 
-      - name: Set image metadata
+      - name: Compute ECR repository URIs
         id: meta
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          IMAGE_URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
-          echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+          API_REPO="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/shopsmart-api"
+          CLIENT_REPO="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/shopsmart-client"
+          echo "api_repo=$API_REPO" >> "$GITHUB_OUTPUT"
+          echo "client_repo=$CLIENT_REPO" >> "$GITHUB_OUTPUT"
 
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
@@ -82,28 +84,28 @@ jobs:
       - name: Build and push server image
         uses: docker/build-push-action@v6
         with:
-          context: ./server
+          context: .
           file: ./docker/Dockerfile.server
           push: true
           tags: |
-            ${{ steps.meta.outputs.image_uri }}:${{ github.sha }}
-            ${{ steps.meta.outputs.image_uri }}:latest
+            ${{ steps.meta.outputs.api_repo }}:${{ github.sha }}
+            ${{ steps.meta.outputs.api_repo }}:latest
 
-      - name: Render ECS task definition
-        id: render-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
+      - name: Build and push client image
+        uses: docker/build-push-action@v6
         with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.ECS_CONTAINER_NAME }}
-          image: ${{ steps.meta.outputs.image_uri }}:${{ github.sha }}
+          context: ./client
+          file: ../docker/Dockerfile.client
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.client_repo }}:${{ github.sha }}
+            ${{ steps.meta.outputs.client_repo }}:latest
 
-      - name: Deploy to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-        with:
-          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          service: ${{ env.ECS_SERVICE }}
-          wait-for-service-stability: true
+      - name: Deploy updated images via Terraform
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="encrypt=true"
+          terraform apply -auto-approve -var "api_image=${{ steps.meta.outputs.api_repo }}:${{ github.sha }}" -var "client_image=${{ steps.meta.outputs.client_repo }}:${{ github.sha }}"
 
       - name: Verify service is responding
         run: |
