@@ -1,19 +1,21 @@
-# ─── Stage 1: Install production dependencies ────────────────────────────────
+# ─── Stage 1: Build the server ───────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
+
 RUN npm ci
 
 COPY prisma ./prisma
 COPY tsconfig.json ./
 COPY src ./src
 
-RUN npm run prisma:generate && npm run build
+RUN npm run prisma:generate
+RUN npm run build
 
 
-# ─── Stage 2: Lean runtime image ─────────────────────────────────────────────
+# ─── Stage 2: Production runtime ─────────────────────────────────────────────
 FROM node:20-alpine AS runtime
 
 WORKDIR /app
@@ -21,20 +23,20 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=4000
 
-# Create non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy the compiled app and installed dependencies from the builder stage.
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
 COPY package*.json ./
 
-# Switch user
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
 USER appuser
 
 EXPOSE 4000
 
-# Healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget -qO- http://localhost:4000/api/health || exit 1
 
