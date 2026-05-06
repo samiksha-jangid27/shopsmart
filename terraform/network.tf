@@ -67,8 +67,15 @@ resource "aws_security_group" "ecs" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    from_port       = var.container_port
-    to_port         = var.container_port
+    from_port       = var.api_container_port
+    to_port         = var.api_container_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    from_port       = var.client_container_port
+    to_port         = var.client_container_port
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }

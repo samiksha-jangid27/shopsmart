@@ -22,10 +22,16 @@ variable "vpc_cidr" {
   default     = "10.40.0.0/16"
 }
 
-variable "container_port" {
+variable "api_container_port" {
   description = "Port exposed by the API container."
   type        = number
   default     = 4000
+}
+
+variable "client_container_port" {
+  description = "Port exposed by the client container."
+  type        = number
+  default     = 3000
 }
 
 variable "desired_count" {
