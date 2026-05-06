@@ -1,4 +1,4 @@
-# ShopSmart
+# ShopSmarttttt
 
 ShopSmart is a premium, high-end e-commerce platform designed with an editorial, Dribbble-inspired UI aesthetic. It features a complete React frontend connected to a Node/Express backend, deployed on AWS ECS Fargate via Infrastructure as Code (Terraform).
 
