@@ -28,6 +28,18 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(optionalAuth);
 
+app.get("/", (_request, response) => {
+  response.json({
+    ok: true,
+    service: "shopsmart-api",
+    endpoints: {
+      health: "/api/health",
+      home: "/api/home",
+      products: "/api/products"
+    }
+  });
+});
+
 app.get("/api/health", (_request, response) => {
   response.json({ ok: true, service: "shopsmart-api" });
 });

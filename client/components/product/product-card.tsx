@@ -12,7 +12,7 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article className="group relative">
       <div className="relative aspect-[3/4] overflow-hidden bg-bone">
-        <Link href={`/product/${product.slug}`} className="block h-full">
+        <Link href={`/product/${product.slug}`} className="relative block h-full w-full">
           <Image src={image} alt={product.images[0]?.alt ?? product.name} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition duration-700 group-hover:scale-105 group-hover:opacity-0" />
           <Image src={hoverImage} alt="" fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover opacity-0 transition duration-700 group-hover:scale-105 group-hover:opacity-100" />
         </Link>

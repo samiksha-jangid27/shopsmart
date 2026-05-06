@@ -1,6 +1,14 @@
 import { cookies } from "next/headers";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+const DEFAULT_LOCAL_API = "http://localhost:4000/api";
+function normalizeEnvUrl(val?: string | null) {
+  if (!val || val === "undefined") return null;
+  return val;
+}
+
+const envApi = normalizeEnvUrl(process.env.NEXT_PUBLIC_API_URL);
+const envApp = normalizeEnvUrl(process.env.NEXT_PUBLIC_APP_URL);
+const API_URL = envApi ?? (envApp ? `${envApp.replace(/\/$/, "")}/api` : DEFAULT_LOCAL_API);
 
 type FetchOptions = RequestInit & { auth?: boolean };
 
@@ -25,7 +33,9 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
   });
 
   if (!response.ok) {
-    console.error("API error:", response.status);
+    if (response.status !== 401) {
+      console.error("API error:", response.status);
+    }
     return {} as T;
   }
 
