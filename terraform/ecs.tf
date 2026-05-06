@@ -144,6 +144,18 @@ locals {
           {
             name  = "PORT"
             value = tostring(var.client_container_port)
+          },
+          {
+            name  = "HOSTNAME"
+            value = "0.0.0.0"
+          },
+          {
+            name  = "NEXT_PUBLIC_API_URL"
+            value = "http://${aws_lb.app.dns_name}/api"
+          },
+          {
+            name  = "NEXT_PUBLIC_APP_URL"
+            value = "http://${aws_lb.app.dns_name}"
           }
         ]
 
@@ -181,7 +193,7 @@ resource "aws_ecs_service" "client" {
   desired_count                     = var.desired_count
   launch_type                       = "FARGATE"
   enable_execute_command            = true
-  health_check_grace_period_seconds = 60
+  health_check_grace_period_seconds = 120
 
   network_configuration {
     subnets          = aws_subnet.public[*].id
@@ -239,6 +251,22 @@ locals {
           {
             name  = "PORT"
             value = tostring(var.api_container_port)
+          },
+          {
+            name  = "NODE_ENV"
+            value = "production"
+          },
+          {
+            name  = "DATABASE_URL"
+            value = "file:/app/data/prod.db"
+          },
+          {
+            name  = "JWT_SECRET"
+            value = var.jwt_secret
+          },
+          {
+            name  = "CLIENT_URL"
+            value = "http://${aws_lb.app.dns_name}"
           }
         ]
 
@@ -276,7 +304,7 @@ resource "aws_ecs_service" "api" {
   desired_count                     = var.desired_count
   launch_type                       = "FARGATE"
   enable_execute_command            = true
-  health_check_grace_period_seconds = 60
+  health_check_grace_period_seconds = 120
 
   network_configuration {
     subnets          = aws_subnet.public[*].id

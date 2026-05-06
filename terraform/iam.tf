@@ -29,8 +29,10 @@ resource "aws_iam_role" "ecs_task" {
   tags               = local.tags
 }
 
-// Local outputs to expose ARNs whether created here or provided via variables
+// Local outputs to expose ARNs whether created here or provided via variables.
+// When use_existing_iam_roles is true and the variable is empty, derive
+// the LabRole ARN from the current AWS account (sandbox/lab environment default).
 locals {
-  execution_role_arn = var.use_existing_iam_roles && length(trimspace(var.ecs_task_execution_role_arn)) > 0 ? var.ecs_task_execution_role_arn : (length(aws_iam_role.ecs_task_execution) > 0 ? aws_iam_role.ecs_task_execution[0].arn : "")
-  task_role_arn      = var.use_existing_iam_roles && length(trimspace(var.ecs_task_role_arn)) > 0 ? var.ecs_task_role_arn : (length(aws_iam_role.ecs_task) > 0 ? aws_iam_role.ecs_task[0].arn : "")
+  execution_role_arn = var.use_existing_iam_roles ? (length(trimspace(var.ecs_task_execution_role_arn)) > 0 ? var.ecs_task_execution_role_arn : local.lab_role_arn) : (length(aws_iam_role.ecs_task_execution) > 0 ? aws_iam_role.ecs_task_execution[0].arn : "")
+  task_role_arn      = var.use_existing_iam_roles ? (length(trimspace(var.ecs_task_role_arn)) > 0 ? var.ecs_task_role_arn : local.lab_role_arn) : (length(aws_iam_role.ecs_task) > 0 ? aws_iam_role.ecs_task[0].arn : "")
 }

@@ -65,15 +65,15 @@ variable "use_existing_iam_roles" {
 }
 
 variable "ecs_task_execution_role_arn" {
-  description = "ARN of an existing ECS task execution role to use when `use_existing_iam_roles` is true."
+  description = "ARN of an existing ECS task execution role. Empty string means derive LabRole ARN from current account ID."
   type        = string
-  default     = "arn:aws:iam::857558323395:role/LabRole"
+  default     = ""
 }
 
 variable "ecs_task_role_arn" {
-  description = "ARN of an existing ECS task role to use when `use_existing_iam_roles` is true."
+  description = "ARN of an existing ECS task role. Empty string means derive LabRole ARN from current account ID."
   type        = string
-  default     = "arn:aws:iam::857558323395:role/LabRole"
+  default     = ""
 }
 
 variable "api_image" {
@@ -86,4 +86,11 @@ variable "client_image" {
   description = "Full ECR image URI for the client (overrides placeholder when non-empty)."
   type        = string
   default     = ""
+}
+
+variable "jwt_secret" {
+  description = "Secret used to sign JWT auth tokens."
+  type        = string
+  default     = "change-me-shopsmart-demo-secret"
+  sensitive   = true
 }

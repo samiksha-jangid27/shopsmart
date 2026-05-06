@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -125,8 +125,8 @@ model Product {
   description        String
   materials          String?
   care               String?
-  price              Decimal          @db.Decimal(10, 2)
-  compareAtPrice     Decimal?         @db.Decimal(10, 2)
+  price              Decimal
+  compareAtPrice     Decimal?
   status             ProductStatus    @default(ACTIVE)
   isFeatured         Boolean          @default(false)
   isNewArrival       Boolean          @default(false)
@@ -225,10 +225,10 @@ model Order {
   userId          String
   addressId       String?
   status          OrderStatus @default(PENDING)
-  subtotal        Decimal     @db.Decimal(10, 2)
-  shipping        Decimal     @default(0) @db.Decimal(10, 2)
-  discount        Decimal     @default(0) @db.Decimal(10, 2)
-  total           Decimal     @db.Decimal(10, 2)
+  subtotal        Decimal
+  shipping        Decimal     @default(0)
+  discount        Decimal     @default(0)
+  total           Decimal
   customerEmail   String
   shippingName    String
   shippingPhone   String
@@ -258,8 +258,8 @@ model OrderItem {
   productName String
   variantName String?
   quantity    Int
-  unitPrice   Decimal         @db.Decimal(10, 2)
-  total       Decimal         @db.Decimal(10, 2)
+  unitPrice   Decimal
+  total       Decimal
 
   order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product         @relation(fields: [productId], references: [id])

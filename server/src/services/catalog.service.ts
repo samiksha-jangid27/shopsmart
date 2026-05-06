@@ -70,14 +70,14 @@ export async function getProducts(query: ProductQuery) {
     status: "ACTIVE",
     OR: query.q
       ? [
-          { name: { contains: query.q, mode: "insensitive" } },
-          { brand: { contains: query.q, mode: "insensitive" } },
-          { description: { contains: query.q, mode: "insensitive" } }
+          { name: { contains: query.q } },
+          { brand: { contains: query.q } },
+          { description: { contains: query.q } }
         ]
       : undefined,
     category: query.category ? { slug: query.category } : undefined,
     collections: query.collection ? { some: { slug: query.collection } } : undefined,
-    brand: query.brand ? { equals: query.brand, mode: "insensitive" } : undefined,
+    brand: query.brand ? { equals: query.brand } : undefined,
     price: {
       gte: query.min ? Number(query.min) : undefined,
       lte: query.max ? Number(query.max) : undefined
@@ -88,7 +88,7 @@ export async function getProducts(query: ProductQuery) {
         ? {
             some: {
               size: query.size,
-              color: query.color ? { equals: query.color, mode: "insensitive" } : undefined
+              color: query.color ? { equals: query.color } : undefined
             }
           }
         : undefined
