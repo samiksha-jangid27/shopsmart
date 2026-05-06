@@ -5,11 +5,7 @@ on:
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
-  ECR_REPOSITORY: shopsmart-api
   ECS_CLUSTER: shopsmart-cluster
-  ECS_SERVICE: shopsmart-service
-  ECS_TASK_DEFINITION: terraform/task-definition.json
-  ECS_CONTAINER_NAME: shopsmart-api
   TF_STATE_BUCKET: shopsmart-tfstate-samiksha-20260505
   TF_STATE_KEY: shopsmart/terraform.tfstate
   TF_DIR: terraform
@@ -53,22 +49,6 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         run: terraform validate
 
-      - name: Terraform plan
-        working-directory: ${{ env.TF_DIR }}
-        run: terraform plan -out=tfplan -detailed-exitcode || true
-
-      - name: Inspect plan and apply only if changes
-        working-directory: ${{ env.TF_DIR }}
-        run: |
-          terraform show -json tfplan > plan.json || true
-          CHANGES=$(jq '.resource_changes | length' plan.json || echo 0)
-          echo "Detected resource changes: $CHANGES"
-          if [ "$CHANGES" -eq 0 ]; then
-            echo "No infrastructure changes to apply"
-            exit 0
-          fi
-          terraform apply -auto-approve tfplan
-
       - name: Compute ECR repository URIs
         id: meta
         run: |
@@ -101,11 +81,14 @@ jobs:
             ${{ steps.meta.outputs.client_repo }}:${{ github.sha }}
             ${{ steps.meta.outputs.client_repo }}:latest
 
-      - name: Deploy updated images via Terraform
+      - name: Terraform plan
         working-directory: ${{ env.TF_DIR }}
         run: |
-          terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="encrypt=true"
-          terraform apply -auto-approve -var "api_image=${{ steps.meta.outputs.api_repo }}:${{ github.sha }}" -var "client_image=${{ steps.meta.outputs.client_repo }}:${{ github.sha }}"
+          terraform plan -out=tfplan -var "api_image=${{ steps.meta.outputs.api_repo }}:${{ github.sha }}" -var "client_image=${{ steps.meta.outputs.client_repo }}:${{ github.sha }}"
+
+      - name: Deploy updated images via Terraform
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform apply -auto-approve tfplan
 
       - name: Verify service is responding
         run: |

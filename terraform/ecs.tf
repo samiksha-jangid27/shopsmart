@@ -129,7 +129,7 @@ locals {
     containerDefinitions = [
       {
         name      = "${local.name}-client"
-        image     = var.client_image
+        image     = var.client_image != "" ? var.client_image : var.placeholder_image
         essential = true
 
         portMappings = [
@@ -224,7 +224,7 @@ locals {
     containerDefinitions = [
       {
         name      = "${local.name}-api"
-        image     = var.api_image
+        image     = var.api_image != "" ? var.api_image : var.placeholder_image
         essential = true
 
         portMappings = [

@@ -14,12 +14,6 @@ AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text --reg
 REPO_API="$AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/shopsmart-api"
 REPO_CLIENT="$AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/shopsmart-client"
 
-# Ensure repos exist (noop if created by Terraform)
-aws ecr describe-repositories --repository-names shopsmart-api --region "$REGION" >/dev/null 2>&1 || \
-  aws ecr create-repository --repository-name shopsmart-api --region "$REGION" >/dev/null
-aws ecr describe-repositories --repository-names shopsmart-client --region "$REGION" >/dev/null 2>&1 || \
-  aws ecr create-repository --repository-name shopsmart-client --region "$REGION" >/dev/null
-
 # Login to ECR
 aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com"
 
@@ -29,8 +23,7 @@ docker build -f docker/Dockerfile.server -t "$REPO_API:$TAG" .
 
 # Build client image
 echo "Building client image..."
-# client build context is ./client; adjust if using Next.js build hooks
-docker build -f docker/Dockerfile.client -t "$REPO_CLIENT:$TAG" ./client
+docker build -f docker/Dockerfile.client -t "$REPO_CLIENT:$TAG" .
 
 # Push images
 echo "Pushing images to ECR..."
