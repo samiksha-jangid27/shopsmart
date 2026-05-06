@@ -15,7 +15,9 @@ resource "aws_ecs_cluster" "main" {
   tags = local.tags
 }
 
-# --- ALB Resources ---
+# ─────────────────────────────────────────────────────────────────────────────
+# ALB
+# ─────────────────────────────────────────────────────────────────────────────
 
 resource "aws_lb" "app" {
   name               = "${local.name}-alb"
@@ -47,6 +49,7 @@ resource "aws_lb_target_group" "client" {
   }
 
   tags = local.tags
+
   lifecycle {
     create_before_destroy = true
   }
@@ -72,6 +75,7 @@ resource "aws_lb_target_group" "api" {
   }
 
   tags = local.tags
+
   lifecycle {
     create_before_destroy = true
   }
@@ -86,6 +90,7 @@ resource "aws_lb_listener" "http" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.client.arn
   }
+
   lifecycle {
     create_before_destroy = true
   }
@@ -107,10 +112,12 @@ resource "aws_lb_listener_rule" "api" {
   }
 }
 
-# --- Client ECS Service ---
+# ─────────────────────────────────────────────────────────────────────────────
+# CLIENT TASK
+# ─────────────────────────────────────────────────────────────────────────────
 
 locals {
-  placeholder_task_definition_client = {
+  client_task_definition = {
     family                  = "${local.name}-client"
     networkMode             = "awsvpc"
     requiresCompatibilities = ["FARGATE"]
@@ -118,11 +125,13 @@ locals {
     memory                  = tostring(var.memory)
     executionRoleArn        = local.execution_role_arn
     taskRoleArn             = local.task_role_arn
+
     containerDefinitions = [
       {
         name      = "${local.name}-client"
-        image     = var.client_image != "" ? var.client_image : var.placeholder_image
+        image     = var.client_image
         essential = true
+
         portMappings = [
           {
             containerPort = var.client_container_port
@@ -130,19 +139,17 @@ locals {
             protocol      = "tcp"
           }
         ]
+
         environment = [
           {
             name  = "PORT"
             value = tostring(var.client_container_port)
           }
         ]
-        command = [
-          "sh",
-          "-c",
-          "node -e \"const http=require('http');http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/plain'});res.end('ShopSmart Frontend Placeholder');}).listen(process.env.PORT||3000);setInterval(()=>{},1000);\""
-        ]
+
         logConfiguration = {
           logDriver = "awslogs"
+
           options = {
             awslogs-group         = aws_cloudwatch_log_group.app.name
             awslogs-region        = var.aws_region
@@ -155,14 +162,14 @@ locals {
 }
 
 resource "aws_ecs_task_definition" "client" {
-  family                   = local.placeholder_task_definition_client.family
-  network_mode             = local.placeholder_task_definition_client.networkMode
-  requires_compatibilities = local.placeholder_task_definition_client.requiresCompatibilities
-  cpu                      = local.placeholder_task_definition_client.cpu
-  memory                   = local.placeholder_task_definition_client.memory
-  execution_role_arn       = local.placeholder_task_definition_client.executionRoleArn
-  task_role_arn            = local.placeholder_task_definition_client.taskRoleArn
-  container_definitions    = jsonencode(local.placeholder_task_definition_client.containerDefinitions)
+  family                   = local.client_task_definition.family
+  network_mode             = local.client_task_definition.networkMode
+  requires_compatibilities = local.client_task_definition.requiresCompatibilities
+  cpu                      = local.client_task_definition.cpu
+  memory                   = local.client_task_definition.memory
+  execution_role_arn       = local.client_task_definition.executionRoleArn
+  task_role_arn            = local.client_task_definition.taskRoleArn
+  container_definitions    = jsonencode(local.client_task_definition.containerDefinitions)
 
   tags = local.tags
 }
@@ -200,10 +207,12 @@ resource "aws_ecs_service" "client" {
   tags = local.tags
 }
 
-# --- API ECS Service ---
+# ─────────────────────────────────────────────────────────────────────────────
+# API TASK
+# ─────────────────────────────────────────────────────────────────────────────
 
 locals {
-  placeholder_task_definition_api = {
+  api_task_definition = {
     family                  = "${local.name}-api"
     networkMode             = "awsvpc"
     requiresCompatibilities = ["FARGATE"]
@@ -211,11 +220,13 @@ locals {
     memory                  = tostring(var.memory)
     executionRoleArn        = local.execution_role_arn
     taskRoleArn             = local.task_role_arn
+
     containerDefinitions = [
       {
         name      = "${local.name}-api"
-        image     = var.api_image != "" ? var.api_image : var.placeholder_image
+        image     = var.api_image
         essential = true
+
         portMappings = [
           {
             containerPort = var.api_container_port
@@ -223,19 +234,17 @@ locals {
             protocol      = "tcp"
           }
         ]
+
         environment = [
           {
             name  = "PORT"
             value = tostring(var.api_container_port)
           }
         ]
-        command = [
-          "sh",
-          "-c",
-          "node -e \"const http=require('http');http.createServer((req,res)=>{const body=req.url==='/api/health'?JSON.stringify({ok:true,service:'shopsmart-api-placeholder'}):JSON.stringify({status:'ok'});res.writeHead(200,{'Content-Type':'application/json'});res.end(body);}).listen(process.env.PORT||4000);setInterval(()=>{},1000);\""
-        ]
+
         logConfiguration = {
           logDriver = "awslogs"
+
           options = {
             awslogs-group         = aws_cloudwatch_log_group.app.name
             awslogs-region        = var.aws_region
@@ -248,14 +257,14 @@ locals {
 }
 
 resource "aws_ecs_task_definition" "api" {
-  family                   = local.placeholder_task_definition_api.family
-  network_mode             = local.placeholder_task_definition_api.networkMode
-  requires_compatibilities = local.placeholder_task_definition_api.requiresCompatibilities
-  cpu                      = local.placeholder_task_definition_api.cpu
-  memory                   = local.placeholder_task_definition_api.memory
-  execution_role_arn       = local.placeholder_task_definition_api.executionRoleArn
-  task_role_arn            = local.placeholder_task_definition_api.taskRoleArn
-  container_definitions    = jsonencode(local.placeholder_task_definition_api.containerDefinitions)
+  family                   = local.api_task_definition.family
+  network_mode             = local.api_task_definition.networkMode
+  requires_compatibilities = local.api_task_definition.requiresCompatibilities
+  cpu                      = local.api_task_definition.cpu
+  memory                   = local.api_task_definition.memory
+  execution_role_arn       = local.api_task_definition.executionRoleArn
+  task_role_arn            = local.api_task_definition.taskRoleArn
+  container_definitions    = jsonencode(local.api_task_definition.containerDefinitions)
 
   tags = local.tags
 }
